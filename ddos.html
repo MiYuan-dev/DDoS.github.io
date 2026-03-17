@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>YUAN's DDoS Controller</title>
+<style>
+  :root{
+    --bg:#0b0b0b;
+    --panel:#0f0f0f;
+    --accent:#39ff14;
+    --muted:#c7c7c7;
+    --glass: rgba(255,255,255,0.03);
+    font-family: "Courier New", Courier, monospace;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#000,#041014);}
+  .container{max-width:980px;margin:28px auto;padding:20px;}
+  .terminal {
+    background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(10,10,10,0.95));
+    border-radius:12px;
+    padding:18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+    color:var(--accent);
+    border:1px solid rgba(57,255,20,0.06);
+  }
+  .header {display:flex;gap:12px;align-items:center;margin-bottom:12px;}
+  .logo img {width:80px;height:80px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;}
+  .title { font-size:14px;color:var(--muted); }
+  .title h1{margin:0;color:var(--accent);font-size:18px}
+
+  .login {display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-bottom:18px;}
+  .login .fields{display:flex;flex-direction:column;gap:8px;}
+  label{font-size:12px;color:#8bd88b}
+  input[type="text"], input[type="password"], input[type="number"]{
+    background:var(--glass);border:1px solid rgba(255,255,255,0.03);
+    color:var(--muted);padding:10px;border-radius:6px;font-family:inherit;
+  }
+  select {
+    background:var(--glass);border:1px solid rgba(255,255,255,0.03);
+    color:var(--muted);padding:10px;border-radius:6px;font-family:inherit;
+    width:100%;
+  }
+  .btn {
+    background:linear-gradient(180deg, rgba(57,255,20,0.14), rgba(57,255,20,0.06));
+    color:#001; border-radius:8px;padding:10px 14px;border:1px solid rgba(57,255,20,0.12);
+    cursor:pointer;font-weight:700;
+  }
+
+  .panel{display:none;margin-top:12px;gap:12px}
+  .grid{display:grid;grid-template-columns: 1fr 340px;gap:12px;}
+  .controls{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);}
+  .controls .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .controls input{width:100%}
+  .stats{
+    background:#06110a;padding:12px;border-radius:8px;border:1px solid rgba(57,255,20,0.04);
+    height:300px;color:var(--muted);overflow:auto;font-size:13px;
+  }
+  .statline{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+  .statline .k{color:#9afc9a}
+  .log{
+    background:black;color:var(--accent);padding:12px;border-radius:6px;height:260px;overflow:auto;font-size:12px;
+    border:1px solid rgba(57,255,20,0.06);
+  }
+  .progress {height:12px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-top:6px;}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,#39ff14,#66ff99);width:0%}
+  .muted {color:#8a8a8a;font-size:12px;margin-top:8px}
+  .warning {color:#ff8b8b;font-size:13px;margin-top:8px}
+  .yuan-message {color:#ff6600;font-size:16px;margin:10px 0;text-align:center;animation:blink 2s infinite;}
+  @keyframes blink {0%{opacity:1;}50%{opacity:0.5;}100%{opacity:1;}}
+  footer{color:#6f6f6f;margin-top:14px;font-size:12px;text-align:right}
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr}
+    .login{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="terminal">
+    <div class="header">
+      <div class="logo">
+        <img src="https://i.imgur.com/Nmr8UiA.jpg" alt="YUAN logo" />
+      </div>
+      <div class="title">
+        <h1>YUAN'S DDoS CONTROLLER</h1>
+        <div class="muted">Real attack engine • Educational purpose</div>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="login">
+      <div class="fields">
+        <div>
+          <label for="user">USERNAME</label><br>
+          <input id="user" name="user" type="text" value="yuan" required />
+        </div>
+        <div>
+          <label for="pass">PASSWORD</label><br>
+          <input id="pass" name="pass" type="password" value="yuan" required />
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+        <button class="btn" type="submit">CONNECT</button>
+        <div class="muted">YUAN WAS HERE</div>
+      </div>
+    </form>
+
+    <!-- Attack Panel -->
+    <div id="panel" class="panel">
+      <div class="yuan-message" id="yuanMessage">⚠️ YUAN WAS HERE - NO SYSTEM IS SAFE ⚠️</div>
+      <div class="grid">
+        <div class="controls">
+          <h3 style="margin:0 0 8px 0;color:var(--accent)">Attack Configuration</h3>
+          <div class="row">
+            <label style="min-width:60px;color:#9afc9a">TARGET</label>
+            <input id="target" type="text" placeholder="192.168.1.1:80 or https://example.com" value="192.168.1.1:80" />
+          </div>
+          <div class="row">
+            <label style="min-width:60px;color:#9afc9a">METHOD</label>
+            <select id="method">
+              <option value="UDP">UDP Flood</option>
+              <option value="TCP">TCP Flood</option>
+              <option value="HTTP">HTTP Flood</option>
+              <option value="SYN">SYN Flood</option>
+              <option value="ICMP">ICMP Flood</option>
+              <option value="SLOWLORIS">Slowloris</option>
+            </select>
+          </div>
+          <div class="row">
+            <label style="min-width:60px;color:#9afc9a">THREADS</label>
+            <input id="threads" type="number" min="1" max="5000" value="100" />
+          </div>
+          <div class="row">
+            <label style="min-width:60px;color:#9afc9a">SECONDS</label>
+            <input id="seconds" type="number" min="1" max="3600" value="30" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="startBtn" class="btn">🚀 START ATTACK</button>
+            <button id="stopBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)">🛑 STOP</button>
+          </div>
+          <div class="warning">⚠️ Only attack systems you own or have permission to test!</div>
+        </div>
+
+        <div>
+          <div class="stats" id="statsPane">
+            <div class="statline"><div class="k">Status</div><div id="status">idle</div></div>
+            <div class="statline"><div class="k">Target</div><div id="s_target">—</div></div>
+            <div class="statline"><div class="k">Method</div><div id="s_method">—</div></div>
+            <div class="statline"><div class="k">Threads</div><div id="s_threads">0</div></div>
+            <div class="statline"><div class="k">Duration</div><div id="s_duration">0s</div></div>
+            <div class="statline"><div class="k">Elapsed</div><div id="s_elapsed">0s</div></div>
+            <div class="statline"><div class="k">Remaining</div><div id="s_remaining">0s</div></div>
+            <div class="statline"><div class="k">Packets/sec</div><div id="s_rps">0</div></div>
+            <div class="statline"><div class="k">Total Packets</div><div id="s_total">0</div></div>
+            <div style="margin-top:10px">
+              <div style="font-size:13px;color:#9afc9a">Progress</div>
+              <div class="progress"><i id="progBar"></i></div>
+            </div>
+            <div style="margin-top:10px;font-size:12px;color:#8a8a8a">Live Log</div>
+            <div class="log" id="log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>YUAN'S DDoS CONTROLLER • REAL ATTACK ENGINE • EDUCATIONAL USE ONLY</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const loginForm = document.getElementById('loginForm');
+  const panel = document.getElementById('panel');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const logEl = document.getElementById('log');
+  const statusEl = document.getElementById('status');
+  const targetEl = document.getElementById('s_target');
+  const methodEl = document.getElementById('s_method');
+  const threadsEl = document.getElementById('s_threads');
+  const durationEl = document.getElementById('s_duration');
+  const elapsedEl = document.getElementById('s_elapsed');
+  const remainingEl = document.getElementById('s_remaining');
+  const rpsEl = document.getElementById('s_rps');
+  const totalEl = document.getElementById('s_total');
+  const progBar = document.getElementById('progBar');
+  const yuanMessage = document.getElementById('yuanMessage');
+
+  let statusInterval = null;
+  const yuanMessages = [
+    "YUAN WON", "YUAN RULES", "YUAN OWNS", "YUAN KING", "YUAN GOD",
+    "YUAN LEGEND", "YUAN VICTORY", "YUAN DOMINATES", "YUAN CONQUERS",
+    "YUAN DESTROYS", "YUAN ANNIHILATES", "YUAN TERMINATES"
+  ];
+
+  function appendLog(txt){
+    const line = document.createElement('div');
+    const time = new Date().toLocaleTimeString();
+    line.textContent = `[${time}] ${txt}`;
+    logEl.prepend(line);
+    while (logEl.children.length > 100) logEl.removeChild(logEl.lastChild);
+  }
+
+  // Login
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const user = document.getElementById('user').value;
+    const pass = document.getElementById('pass').value;
+    
+    statusEl.textContent = 'authenticating...';
+    appendLog(`Attempting login as ${user}`);
+    
+    fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: user, password: pass})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success){
+        loginForm.style.display = 'none';
+        panel.style.display = 'block';
+        statusEl.textContent = 'idle';
+        appendLog('Session established. Ready to attack.');
+        startStatusUpdates();
+      } else {
+        appendLog('Login failed');
+      }
+    })
+    .catch(err => {
+      appendLog('Login error: ' + err);
+    });
+  });
+
+  // Start attack
+  startBtn.addEventListener('click', function(){
+    const target = document.getElementById('target').value;
+    const method = document.getElementById('method').value;
+    const threads = document.getElementById('threads').value;
+    const seconds = document.getElementById('seconds').value;
+
+    appendLog(`🚀 Starting ${method} attack on ${target} with ${threads} threads for ${seconds}s`);
+
+    fetch('/api/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        target: target,
+        method: method,
+        threads: parseInt(threads),
+        seconds: parseInt(seconds)
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success){
+        appendLog('✅ Attack launched successfully');
+      } else {
+        appendLog('❌ Attack failed: ' + data.error);
+      }
+    })
+    .catch(err => {
+      appendLog('❌ Error: ' + err);
+    });
+  });
+
+  // Stop attack
+  stopBtn.addEventListener('click', function(){
+    appendLog('🛑 Stopping attack...');
+    fetch('/api/stop', {method: 'POST'})
+    .then(res => res.json())
+    .then(data => {
+      if(data.success){
+        appendLog('✅ Attack stopped');
+      }
+    })
+    .catch(err => {
+      appendLog('❌ Error: ' + err);
+    });
+  });
+
+  // Status updates
+  function startStatusUpdates(){
+    statusInterval = setInterval(() => {
+      fetch('/api/status')
+        .then(res => res.json())
+        .then(data => {
+          // Update UI
+          statusEl.textContent = data.status;
+          targetEl.textContent = data.target || '—';
+          methodEl.textContent = data.method || '—';
+          threadsEl.textContent = data.threads || '0';
+          durationEl.textContent = data.duration + 's';
+          elapsedEl.textContent = data.elapsed + 's';
+          remainingEl.textContent = data.remaining + 's';
+          rpsEl.textContent = data.rps;
+          totalEl.textContent = data.packets;
+          
+          if(data.duration > 0){
+            const percent = (data.elapsed / data.duration) * 100;
+            progBar.style.width = Math.min(100, percent) + '%';
+          }
+          
+          yuanMessage.innerHTML = `⚠️ ${data.yuan_message || 'YUAN WAS HERE'} - NO SYSTEM IS SAFE ⚠️`;
+          
+          if(data.running && Math.random() < 0.3){
+            appendLog(`📊 Packets: ${data.packets} | RPS: ${data.rps}`);
+          }
+        })
+        .catch(err => {
+          console.log('Status error:', err);
+        });
+    }, 500);
+  }
+
+  // Clean up
+  window.addEventListener('beforeunload', function(){
+    if(statusInterval) clearInterval(statusInterval);
+  });
+
+  appendLog('YUAN\'s DDoS Controller loaded. Ready for action.');
+})();
+</script>
+</body>
+</html>
