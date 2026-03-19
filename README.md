@@ -15,7 +15,7 @@ A powerful, educational DDoS attack controller with a web interface and command-
 
 ## 📸 **Screenshot Preview**
 ![Screenshot_2026-03-18-13-56-21-557_com termux-edit](https://github.com/user-attachments/assets/379181b5-8583-425b-917d-586cbeb22f2b)
+## 🌐 **Web Interface**
 ![Screenshot_2026-03-19-16-19-17-514_com android chrome-edit](https://github.com/user-attachments/assets/22b886ce-1337-43b9-9f63-cb08163eb18c)
-![Screenshot_2026-03-19-16-19-17-514_com android chrome-edit](https://github.com/user-attachments/assets/9c0d4849-4d7e-4be6-b3b3-b600fa0c78fc)
 ![Screenshot_2026-03-19-16-19-50-202_com android chrome-edit](https://github.com/user-attachments/assets/dbc51321-e522-4d34-83c2-aa640191c114)
 
