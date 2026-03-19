@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-╔══════════════════════════════════════════════════════════╗
-║     YUAN'S WEB DDOS CONTROLLER - v3.0                   ║
-║     Control your DDoS attacks from a web interface      ║
-║              EDUCATIONAL PURPOSE ONLY                    ║
-╚══════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════════╗
+║              YUAN's DDoS CONTROLLER - BLACKARCH EDITION          ║
+║                    YUAN WAS HERE - NO SYSTEM IS SAFE              ║
+║                         EDUCATIONAL PURPOSE ONLY                  ║
+╚═══════════════════════════════════════════════════════════════════╝
 """
 
 import os
@@ -18,25 +18,55 @@ import ssl
 import json
 import hashlib
 import base64
+import subprocess
+import argparse
 from datetime import datetime
 from urllib.parse import urlparse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from collections import deque
 
-# ==================== CONFIGURATION ====================
-WEB_PORT = 8080
+# ==================== BLACKARCH CONFIGURATION ====================
+DEFAULT_PORT = 8080
 API_PORT = 8081
-VERSION = "3.0 - WEB CONTROLLER"
+VERSION = "1.0 - BLACKARCH EDITION"
 CODENAME = "YUAN'S FURY"
 SIGNATURE = "[ Yu4n_Ph4nt0m ]"
 MAX_THREADS = 5000
+
+# BlackArch color scheme
+class Colors:
+    # BlackArch specific colors
+    BA_RED = '\033[38;5;160m'
+    BA_GREEN = '\033[38;5;40m'
+    BA_BLUE = '\033[38;5;33m'
+    BA_ORANGE = '\033[38;5;208m'
+    BA_PURPLE = '\033[38;5;93m'
+    BA_YELLOW = '\033[38;5;220m'
+    BA_CYAN = '\033[38;5;51m'
+    
+    # Standard colors
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
+    RESET = '\033[0m'
+    
+    # Styles
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    BLINK = '\033[5m'
+    UNDERLINE = '\033[4m'
 
 # Yuan's epic messages
 YUAN_MESSAGES = [
     "YUAN WON", "YUAN RULES", "YUAN OWNS", "YUAN KING", "YUAN GOD",
     "YUAN LEGEND", "YUAN VICTORY", "YUAN DOMINATES", "YUAN CONQUERS",
     "YUAN DESTROYS", "YUAN ANNIHILATES", "YUAN TERMINATES", "YUAN ELIMINATES",
-    "YUAN ERASES", "YUAN OBLITERATES", "YUAN DECIMATES", "YUAN DEVASTATES"
+    "YUAN ERASES", "YUAN OBLITERATES", "YUAN DECIMATES", "YUAN DEVASTATES",
+    "BLACKARCH DOMINATES", "SYSTEM BREACHED", "NETWORK OWNED"
 ]
 
 # Attack state
@@ -55,32 +85,61 @@ current_attack = {
 attack_thread = None
 attack_lock = threading.Lock()
 
-class Colors:
-    """Elite color scheme"""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    RESET = '\033[0m'
-    ORANGE = '\033[38;5;208m'
-    PURPLE = '\033[38;5;129m'
-    GOLD = '\033[38;5;220m'
+# ==================== NETWORK UTILITIES ====================
+
+def get_local_ip():
+    """Get local IP address automatically"""
+    try:
+        # Create socket to determine local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        try:
+            # Fallback: get hostname
+            hostname = socket.gethostname()
+            return socket.gethostbyname(hostname)
+        except:
+            return "127.0.0.1"
+
+def get_public_ip():
+    """Try to get public IP (for cloudflared)"""
+    try:
+        import urllib.request
+        with urllib.request.urlopen('https://api.ipify.org', timeout=3) as response:
+            return response.read().decode('utf-8')
+    except:
+        return None
+
+def check_cloudflared():
+    """Check if cloudflared is installed"""
+    try:
+        result = subprocess.run(['which', 'cloudflared'], 
+                               capture_output=True, text=True)
+        return result.returncode == 0
+    except:
+        return False
+
+def print_cloudflared_instructions(local_ip, port):
+    """Print cloudflared tunnel instructions"""
+    print(f"\n{Colors.BA_CYAN}╔════════════════════════════════════════════════════════════╗")
+    print(f"║              CLOUDFLARED TUNNEL INSTRUCTIONS            ║")
+    print(f"╚════════════════════════════════════════════════════════════╝{Colors.RESET}")
     
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    BLINK = '\033[5m'
-    UNDERLINE = '\033[4m'
-    
-    # Combinations
-    YUAN = ORANGE + BOLD + BLINK
-    SUCCESS = GREEN + BOLD
-    ERROR = RED + BOLD
-    WARNING = YELLOW + BOLD
-    INFO = CYAN + BOLD
-    BLOOD = RED + BOLD + BLINK
+    if check_cloudflared():
+        print(f"{Colors.BA_GREEN}[✓] cloudflared is installed{Colors.RESET}")
+        print(f"\n{Colors.BA_YELLOW}Run this command in another terminal:{Colors.RESET}")
+        print(f"{Colors.WHITE}cloudflared tunnel --url http://{local_ip}:{port}{Colors.RESET}")
+        print(f"\n{Colors.BA_GREEN}After running, cloudflared will give you a URL like:{Colors.RESET}")
+        print(f"{Colors.BA_CYAN}https://random-name.trycloudflare.com{Colors.RESET}")
+    else:
+        print(f"{Colors.BA_RED}[!] cloudflared not found{Colors.RESET}")
+        print(f"\n{Colors.BA_YELLOW}Install cloudflared:{Colors.RESET}")
+        print(f"{Colors.WHITE}  Termux: pkg install cloudflared{Colors.RESET}")
+        print(f"{Colors.WHITE}  Linux:  sudo apt install cloudflared{Colors.RESET}")
+        print(f"{Colors.WHITE}  Mac:    brew install cloudflared{Colors.RESET}")
 
 # ==================== DDoS ENGINE ====================
 
@@ -228,7 +287,7 @@ class AttackEngine:
             t.start()
             workers.append(t)
         
-        print(f"{Colors.GREEN}[✓] Attack started: {self.method} on {self.target}{Colors.RESET}")
+        print(f"{Colors.BA_GREEN}[✓] Attack started: {self.method} on {self.target}{Colors.RESET}")
         
         # Run for duration
         time.sleep(self.duration)
@@ -240,11 +299,15 @@ class AttackEngine:
         with attack_lock:
             current_attack['running'] = False
             current_attack['status'] = 'stopped'
-        print(f"{Colors.YELLOW}[!] Attack stopped{Colors.RESET}")
+        print(f"{Colors.BA_YELLOW}[!] Attack stopped{Colors.RESET}")
 
 # ==================== WEB SERVER ====================
 
 class WebHandler(BaseHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        self.web_port = kwargs.pop('web_port', DEFAULT_PORT)
+        super().__init__(*args, **kwargs)
+    
     def do_GET(self):
         if self.path == '/':
             self.send_response(200)
@@ -289,6 +352,21 @@ class WebHandler(BaseHTTPRequestHandler):
                 }
             
             self.wfile.write(json.dumps(status).encode())
+            
+        elif self.path == '/api/network':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            
+            network_info = {
+                'local_ip': get_local_ip(),
+                'port': self.web_port,
+                'public_ip': get_public_ip(),
+                'cloudflared_installed': check_cloudflared(),
+                'local_url': f"http://{get_local_ip()}:{self.web_port}",
+                'localhost_url': f"http://localhost:{self.web_port}"
+            }
+            self.wfile.write(json.dumps(network_info).encode())
             
         elif self.path == '/favicon.ico':
             self.send_response(204)
@@ -383,44 +461,113 @@ class WebHandler(BaseHTTPRequestHandler):
         # Suppress default logging
         pass
 
+# ==================== BLACKARCH BANNER ====================
+
+def print_blackarch_banner(port):
+    """Print BlackArch Linux style banner"""
+    local_ip = get_local_ip()
+    public_ip = get_public_ip()
+    
+    banner = f"""
+{Colors.BA_RED}╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║    ██╗   ██╗██╗   ██╗ █████╗ ███╗   ██╗                           ║
+║    ╚██╗ ██╔╝██║   ██║██╔══██╗████╗  ██║                           ║
+║     ╚████╔╝ ██║   ██║███████║██╔██╗ ██║                           ║
+║      ╚██╔╝  ██║   ██║██╔══██║██║╚██╗██║                           ║
+║       ██║   ╚██████╔╝██║  ██║██║ ╚████║                           ║
+║       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝                           ║
+║                                                                   ║
+║                    {Colors.WHITE}DDoS CONTROLLER{Colors.BA_RED}                                ║
+║                    {Colors.BA_ORANGE}{VERSION}{Colors.BA_RED}                        ║
+║                                                                   ║
+║     {Colors.BA_GREEN}┌─[{Colors.WHITE}root@{Colors.BA_BLUE}blackarch{Colors.BA_GREEN}]─[{Colors.WHITE}{os.path.basename(__file__)}{Colors.BA_GREEN}]{Colors.BA_RED}                   ║
+║     {Colors.BA_GREEN}└──╼ {Colors.WHITE}$ python {os.path.basename(__file__)} --port {port}{Colors.BA_RED}              ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+{Colors.RESET}
+    
+{Colors.BA_GREEN}[✓]{Colors.WHITE} Attack Engine: {Colors.BA_GREEN}Ready{Colors.RESET}
+{Colors.BA_GREEN}[✓]{Colors.WHITE} Local URL:     {Colors.BA_CYAN}http://localhost:{port}{Colors.RESET}
+{Colors.BA_GREEN}[✓]{Colors.WHITE} Network URL:   {Colors.BA_CYAN}http://{local_ip}:{port}{Colors.RESET}"""
+    
+    if public_ip:
+        banner += f"\n{Colors.BA_GREEN}[✓]{Colors.WHITE} Public IP:     {Colors.BA_CYAN}{public_ip}{Colors.RESET}"
+    
+    banner += f"\n{Colors.BA_GREEN}[✓]{Colors.WHITE} API Endpoint:  {Colors.BA_CYAN}http://{local_ip}:{port}/api{Colors.RESET}"
+    
+    print(banner)
+    print_cloudflared_instructions(local_ip, port)
+
+# ==================== COMMAND LINE INTERFACE ====================
+
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="YUAN's DDoS Controller - BlackArch Edition",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f'''
+{Colors.BA_GREEN}Examples:{Colors.RESET}
+  {Colors.BA_CYAN}python {os.path.basename(__file__)}{Colors.RESET}                    # Run on default port 8080
+  {Colors.BA_CYAN}python {os.path.basename(__file__)} --port 9090{Colors.RESET}        # Run on custom port 9090
+  {Colors.BA_CYAN}python {os.path.basename(__file__)} -p 8080{Colors.RESET}            # Short form
+  {Colors.BA_CYAN}python {os.path.basename(__file__)} --help{Colors.RESET}             # Show this help
+
+{Colors.BA_YELLOW}After starting, access the web interface at:{Colors.RESET}
+  {Colors.BA_CYAN}http://localhost:PORT{Colors.RESET}  (where PORT is your specified port)
+
+{Colors.BA_RED}⚠️  EDUCATIONAL PURPOSE ONLY{Colors.RESET}
+        '''
+    )
+    
+    parser.add_argument(
+        '--port', '-p',
+        type=int,
+        default=DEFAULT_PORT,
+        help=f'Port to run the web server on (default: {DEFAULT_PORT})'
+    )
+    
+    parser.add_argument(
+        '--version', '-v',
+        action='version',
+        version=f'YUAN DDoS Controller {VERSION}'
+    )
+    
+    return parser.parse_args()
+
 # ==================== MAIN ====================
 
-def print_banner():
-    banner = f"""
-{Colors.CYAN}{Colors.BOLD}
-╔═══════════════════════════════════════════════════════════════════════╗
-║              YUAN'S WEB DDOS CONTROLLER - v3.0                        ║
-║              Control attacks from web interface                        ║
-╠═══════════════════════════════════════════════════════════════════════╣
-║                                                                       ║
-║                    ⚠️  EDUCATIONAL PURPOSE ONLY  ⚠️                   ║
-║                                                                       ║
-╠═══════════════════════════════════════════════════════════════════════╣
-║  Web Interface: http://localhost:{WEB_PORT}                          ║
-║  API Endpoint:  http://localhost:{API_PORT}                          ║
-╚═══════════════════════════════════════════════════════════════════════╝
-{Colors.RESET}"""
-    print(banner)
-
 def main():
-    os.system('clear')
-    print_banner()
+    # Parse command line arguments
+    args = parse_arguments()
+    WEB_PORT = args.port
     
-    print(f"{Colors.GREEN}[✓] Starting web server on port {WEB_PORT}{Colors.RESET}")
-    print(f"{Colors.YELLOW}[!] Open http://localhost:{WEB_PORT} in your browser{Colors.RESET}")
-    print(f"{Colors.RED}[!] Press Ctrl+C to stop{Colors.RESET}\n")
+    os.system('clear' if os.name == 'posix' else 'cls')
+    print_blackarch_banner(WEB_PORT)
+    
+    print(f"\n{Colors.BA_GREEN}[✓]{Colors.WHITE} Starting web server on port {WEB_PORT}{Colors.RESET}")
+    print(f"{Colors.BA_YELLOW}[!]{Colors.WHITE} Press Ctrl+C to stop{Colors.RESET}\n")
     
     try:
-        server = HTTPServer(('0.0.0.0', WEB_PORT), WebHandler)
+        # Create server with custom handler that knows the port
+        server = HTTPServer(('0.0.0.0', WEB_PORT), 
+                           lambda *args, **kwargs: WebHandler(*args, web_port=WEB_PORT, **kwargs))
         server.serve_forever()
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}[!] Shutting down...{Colors.RESET}")
+        print(f"\n{Colors.BA_YELLOW}[!]{Colors.WHITE} Shutting down...{Colors.RESET}")
         with attack_lock:
             current_attack['running'] = False
         server.shutdown()
-        print(f"{Colors.GREEN}[✓] Server stopped{Colors.RESET}")
+        print(f"{Colors.BA_GREEN}[✓]{Colors.WHITE} Server stopped{Colors.RESET}")
+    except OSError as e:
+        if "Address already in use" in str(e):
+            print(f"{Colors.BA_RED}[!]{Colors.WHITE} Port {WEB_PORT} is already in use!{Colors.RESET}")
+            print(f"{Colors.BA_YELLOW}[!]{Colors.WHITE} Try a different port:{Colors.RESET}")
+            print(f"  python {os.path.basename(__file__)} --port 9090")
+        else:
+            print(f"{Colors.BA_RED}[!]{Colors.WHITE} Error: {e}{Colors.RESET}")
     except Exception as e:
-        print(f"{Colors.RED}[!] Error: {e}{Colors.RESET}")
+        print(f"{Colors.BA_RED}[!]{Colors.WHITE} Error: {e}{Colors.RESET}")
 
 if __name__ == "__main__":
     main()
